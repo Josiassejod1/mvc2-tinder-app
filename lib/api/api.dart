@@ -3,7 +3,7 @@ import 'package:mvc2_card_game/models/character.dart';
 import 'package:mvc2_card_game/models/move.dart';
 
 final client = http.Client();
-final baseUrl = 'https://secure-hamlet-19722.herokuapp.com/api/v1/characters/';
+const baseUrl = 'https://secure-hamlet-19722.herokuapp.com/api/v1/characters/';
 
 class Api {
   static Future<Character> getCharacter(String name) async {
