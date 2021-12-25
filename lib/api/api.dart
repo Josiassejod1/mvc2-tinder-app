@@ -22,7 +22,7 @@ class Api {
   }
 
   static Future<Move> getMoves(String name) async {
-    final url = Uri.parse(baseUrl + '$name');
+    final url = Uri.parse(baseUrl + '$name' + 'moves');
     try {
       final response = await client.get(url) as Map<String, dynamic>;
       return Move.fromJson(response);
