@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_web3/ethereum.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:mvc2_card_game/api/api.dart';
+import 'package:mvc2_card_game/controller/home_controller.dart';
 import 'package:mvc2_card_game/models/character.dart';
 import 'package:playing_cards/playing_cards.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
+class HomePage extends StatelessWidget {
+  final controller = Get.put(HomeController());
+  HomePage({Key? key}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  void onInit() {
+    controller.init();
   }
 
   @override
   Widget build(BuildContext context) {
+    var shown = '';
+    if (controller.isConnected && controller.isInOperatingChain)
+      shown = 'You\'re connected!';
+    else if (controller.isConnected && !controller.isInOperatingChain)
+      shown = 'Wrong chain! Please connect to BSC. (56)';
+    else if (Ethereum.isSupported)
+      return OutlinedButton(
+          child: Text('Connect'), onPressed: controller.connectProvider);
+    else
+      shown = 'Your browser is not supported!';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(shown),
       ),
       body: FutureBuilder(
           future: Api.getCharacter('Akuma'),
@@ -54,11 +60,6 @@ class _HomePageState extends State<HomePage> {
               ),
             );
           }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
