@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:get/get.dart';
 
@@ -7,16 +9,26 @@ class HomeController extends GetxController {
 
   bool get isConnected => Ethereum.isSupported && currentAddress.isNotEmpty;
 
+  String _banner = '';
+  Rx<String> get bannerDetail => _banner.obs;
+
+  setBanner(String text) {
+    _banner = text;
+  }
+
+  getRandomCharacter() {
+
+  }
   String currentAddress = '';
 
   int currentChain = -1;
 
   bool wcConnected = false;
 
-  static const OPERATING_CHAIN = 56;
+  static const OPERATING_CHAIN = 4;
 
   final wc = WalletConnectProvider.fromRpc(
-        {4: 'https://rinkeby.etherscan.io/'},
+        {4: 'https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'},
         chainId: 4,
         network: 'rinkeby',
       );
@@ -25,10 +37,13 @@ class HomeController extends GetxController {
 
   connectProvider() async {
     if (Ethereum.isSupported) {
+      print("wtf");
       final accs = await ethereum!.requestAccount();
       if (accs.isNotEmpty) {
+          print("dang");
         currentAddress = accs.first;
         currentChain = await ethereum!.getChainId();
+        inspect(currentChain);
       }
 
       update();
@@ -39,7 +54,7 @@ class HomeController extends GetxController {
     await wc.connect();
     if (wc.connected) {
       currentAddress = wc.accounts.first;
-      currentChain = 56;
+      currentChain = 4;
       wcConnected = true;
       web3wc = Web3Provider.fromWalletConnect(wc);
     }
@@ -90,5 +105,4 @@ class HomeController extends GetxController {
 
     super.onInit();
   }
-}
 }
