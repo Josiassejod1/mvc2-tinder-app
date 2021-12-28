@@ -1,70 +1,79 @@
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:get/get.dart';
 
 
 class HomeController extends GetxController {
-  bool get isInOperatingChain => currentChain == OPERATING_CHAIN;
+  RxBool get isInOperatingChain => (currentChain == OPERATING_CHAIN).obs;
 
-  bool get isConnected => Ethereum.isSupported && currentAddress.isNotEmpty;
+  RxBool get isConnected => (isSupported.value && currentAddressEmpty.value).obs;
+
+  RxBool get isSupported => Ethereum.isSupported.obs;
+  RxBool get currentAddressEmpty => currentAddress.isNotEmpty.obs;
+  RxString get currentAddress => _currentAddress.obs;
 
   String _banner = '';
+  String _currentAddress = '';
   Rx<String> get bannerDetail => _banner.obs;
+  int _currentChain = -1;
 
   setBanner(String text) {
     _banner = text;
+    bannerDetail.refresh();
   }
-
-  getRandomCharacter() {
-
-  }
-  String currentAddress = '';
-
-  int currentChain = -1;
+ 
+  RxInt get currentChain => _currentChain.obs;
 
   bool wcConnected = false;
 
   static const OPERATING_CHAIN = 4;
 
   final wc = WalletConnectProvider.fromRpc(
-        {4: 'https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'},
+        {4: dotenv.env['ALCHEMY_API_LINK']!},
         chainId: 4,
         network: 'rinkeby',
       );
 
-  Web3Provider? web3wc;
+  Rx<Web3Provider>? web3wc = null;
 
   connectProvider() async {
     if (Ethereum.isSupported) {
-      print("wtf");
       final accs = await ethereum!.requestAccount();
       if (accs.isNotEmpty) {
-          print("dang");
-        currentAddress = accs.first;
-        currentChain = await ethereum!.getChainId();
-        inspect(currentChain);
-      }
+        try {
+          _currentAddress = accs.first;
+          _currentChain = await ethereum!.getChainId();
+          currentChain.refresh();
+          currentAddress.refresh();
+         inspect(_currentChain);
+        } on EthereumUserRejected {
+           ScaffoldMessenger.of(Get.context!).showSnackBar(const SnackBar(
+                            content: Text("Character Minted"),
+                          ));
+        }
+      } 
 
       update();
     }
   }
 
   connectWC() async {
-    await wc.connect();
     if (wc.connected) {
-      currentAddress = wc.accounts.first;
-      currentChain = 4;
+      _currentAddress = wc.accounts.first;
+      _currentChain = 4;
       wcConnected = true;
-      web3wc = Web3Provider.fromWalletConnect(wc);
+      web3wc = Web3Provider.fromEthereum(ethereum!).obs;
     }
 
     update();
   }
 
   clear() {
-    currentAddress = '';
-    currentChain = -1;
+    _currentAddress = '';
+    _currentChain = -1;
     wcConnected = false;
     web3wc = null;
 
@@ -91,7 +100,7 @@ class HomeController extends GetxController {
   }
 
   testProvider() async {
-    final rpcProvider = JsonRpcProvider('https://rinkeby.etherscan.io/');
+    final rpcProvider = JsonRpcProvider(dotenv.env['ALCHEMY_API_LINK']!);
     print(rpcProvider);
     print(await rpcProvider.getNetwork());
   }

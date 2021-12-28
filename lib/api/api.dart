@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:mvc2_card_game/models/character.dart';
@@ -10,12 +9,9 @@ const baseUrl = 'https://secure-hamlet-19722.herokuapp.com/api/v1/characters/';
 
 class Api {
   static Future<Character> getCharacter(String name) async {
-    final url = Uri.parse(baseUrl + '$name');
+    final url = Uri.parse(baseUrl + name);
     try {
       final response = await client.get(url);
-      inspect(response);
-      inspect(jsonDecode(response.body));
-      inspect(jsonDecode(response.body)[0]);
       return Character.fromJson(jsonDecode(response.body)[0]);
     } catch (error) {
       print("error fetching api $error");
@@ -28,7 +24,7 @@ class Api {
   }
 
   static Future<Move> getMoves(String name) async {
-    final url = Uri.parse(baseUrl + '$name' + 'moves');
+    final url = Uri.parse(baseUrl + name + 'moves');
     try {
       final response = await client.get(url) as Map<String, dynamic>;
       return Move.fromJson(response);
